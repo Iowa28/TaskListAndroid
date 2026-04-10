@@ -31,9 +31,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
-import androidx.lifecycle.viewmodel.compose.viewModel
 import ru.aminovniaz.firstapp.data.Task
 import ru.aminovniaz.firstapp.data.TaskRepository
 import ru.aminovniaz.firstapp.ui.theme.FirstAppTheme

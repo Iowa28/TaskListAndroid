@@ -11,7 +11,6 @@ import com.google.gson.reflect.TypeToken
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
-// extension property для создания DataStore
 private val Context.dataStore: DataStore<Preferences> by preferencesDataStore("tasks_prefs")
 
 class TaskRepository(private val context: Context) {
@@ -20,7 +19,7 @@ class TaskRepository(private val context: Context) {
     private val TASKS_KEY = stringPreferencesKey("tasks_list")
 
     suspend fun saveTasks(tasks: List<Task>) {
-        val json = gson.toJson(tasks) // Превращаем список в JSON-строку
+        val json = gson.toJson(tasks)
         context.dataStore.edit { preferences ->
             preferences[TASKS_KEY] = json
         }

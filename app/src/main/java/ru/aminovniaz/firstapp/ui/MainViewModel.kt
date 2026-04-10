@@ -11,13 +11,13 @@ import ru.aminovniaz.firstapp.data.TaskRepository
 
 class MainViewModel(private val repository: TaskRepository) : ViewModel() {
 
-    private val _tasks = MutableStateFlow<List<Task>>(emptyList())
-    val tasks: StateFlow<List<Task>> = _tasks.asStateFlow()
+    private val tasksMutable = MutableStateFlow<List<Task>>(emptyList())
+    val tasks: StateFlow<List<Task>> = tasksMutable.asStateFlow()
 
     init {
         viewModelScope.launch {
             repository.tasksFlow.collect { loadedTasks ->
-                _tasks.value = loadedTasks
+                tasksMutable.value = loadedTasks
             }
         }
     }
@@ -25,16 +25,16 @@ class MainViewModel(private val repository: TaskRepository) : ViewModel() {
     fun addTask(taskName: String) {
         viewModelScope.launch {
             val newTask = Task(name = taskName)
-            val currentList = _tasks.value.toMutableList()
+            val currentList = tasksMutable.value.toMutableList()
             currentList.add(newTask)
-            _tasks.value = currentList
+            tasksMutable.value = currentList
             repository.saveTasks(currentList)
         }
     }
 
     fun deleteTaskById(taskId: String) {
         viewModelScope.launch {
-            val currentList = _tasks.value
+            val currentList = tasksMutable.value
             repository.deleteTaskById(taskId, currentList)
         }
     }
