@@ -4,6 +4,8 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -30,6 +32,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onPreviewKeyEvent
+import androidx.compose.ui.input.key.type
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
@@ -66,21 +75,40 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun MainScreen(viewModel: MainViewModel) {
+    val focusManager = LocalFocusManager.current
+    val keyboardController = LocalSoftwareKeyboardController.current
     val tasks by viewModel.tasks.collectAsState()
     var text by remember { mutableStateOf("") }
+
     Column(
         Modifier
             .fillMaxSize()
             .padding(top = 56.dp, start = 16.dp, end = 16.dp)
+            .clickable( // Делаем всю область кликабельной
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null // Убираем визуальный эффект нажатия (ripple)
+            ) {
+                focusManager.clearFocus() // Убираем фокус и скрываем клавиатуру
+            }
     ) {
-        Row(
-            Modifier.fillMaxWidth()
-        ) {
+        Row(Modifier.fillMaxWidth()) {
             OutlinedTextField(
                 text,
                 { text = it },
                 label = { Text("Новая задача") },
-                modifier = Modifier.weight(1f)
+                modifier = Modifier
+                    .weight(1f)
+                    .onPreviewKeyEvent { keyEvent ->
+                        if (keyEvent.key == Key.Back) {
+                            if (keyEvent.type == KeyEventType.KeyUp) {
+                                focusManager.clearFocus()
+                                keyboardController?.hide()
+                            }
+                            true
+                        } else {
+                            false
+                        }
+                    }
             )
             Spacer(Modifier.width(16.dp))
             Button(
@@ -88,6 +116,8 @@ fun MainScreen(viewModel: MainViewModel) {
                     if (text.isNotBlank()) {
                         viewModel.addTask(text)
                         text = ""
+                        focusManager.clearFocus()
+                        keyboardController?.hide()
                     }
                 },
                 shape = RoundedCornerShape(4.dp),
@@ -97,9 +127,7 @@ fun MainScreen(viewModel: MainViewModel) {
             }
         }
 
-        NamesList(
-            tasks
-        ) { taskToDelete ->
+        NamesList(tasks) { taskToDelete ->
             viewModel.deleteTaskById(taskToDelete.id)
         }
     }
