@@ -18,6 +18,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.Button
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -78,17 +79,18 @@ fun MainScreen(viewModel: MainViewModel) {
     val focusManager = LocalFocusManager.current
     val keyboardController = LocalSoftwareKeyboardController.current
     val tasks by viewModel.tasks.collectAsState()
+    val editingTask by viewModel.editingTask.collectAsState()
     var text by remember { mutableStateOf("") }
 
     Column(
         Modifier
             .fillMaxSize()
             .padding(top = 56.dp, start = 16.dp, end = 16.dp)
-            .clickable( // Делаем всю область кликабельной
+            .clickable(
                 interactionSource = remember { MutableInteractionSource() },
-                indication = null // Убираем визуальный эффект нажатия (ripple)
+                indication = null
             ) {
-                focusManager.clearFocus() // Убираем фокус и скрываем клавиатуру
+                focusManager.clearFocus()
             }
     ) {
         Row(Modifier.fillMaxWidth()) {
@@ -127,16 +129,31 @@ fun MainScreen(viewModel: MainViewModel) {
             }
         }
 
-        NamesList(tasks) { taskToDelete ->
-            viewModel.deleteTaskById(taskToDelete.id)
-        }
+        NamesList(
+            tasks,
+            { task -> viewModel.deleteTaskById(task.id) },
+            { task -> viewModel.startEditing(task) }
+        )
+    }
+
+    editingTask?.let { task ->
+        EditTaskDialog(
+            currentName = task.name,
+            onSave = { newName ->
+                viewModel.updateTask(task.id, newName)
+            },
+            onDismiss = {
+                viewModel.cancelEditing()
+            }
+        )
     }
 }
 
 @Composable
 private fun NamesList(
     tasks: List<Task>,
-    onDelete: (Task) -> Unit
+    onDelete: (Task) -> Unit,
+    onEdit: (Task) -> Unit
 ) {
     LazyColumn {
         items(tasks) { task ->
@@ -150,6 +167,12 @@ private fun NamesList(
                     text = task.name,
                     modifier = Modifier.weight(1f)
                 )
+                IconButton(onClick = { onEdit(task) }) {
+                    Icon(
+                        imageVector = Icons.Default.Edit,
+                        contentDescription = "Edit"
+                    )
+                }
                 IconButton(
                     onClick = { onDelete(task) }
                 ) {

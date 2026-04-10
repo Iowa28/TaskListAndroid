@@ -15,8 +15,8 @@ android {
         applicationId = "ru.aminovniaz.firstapp"
         minSdk = 24
         targetSdk = 36
-        versionCode = 7
-        versionName = "1.5.1"
+        versionCode = 8
+        versionName = "1.6"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }

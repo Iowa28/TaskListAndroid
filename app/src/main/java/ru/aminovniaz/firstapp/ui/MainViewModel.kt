@@ -14,6 +14,9 @@ class MainViewModel(private val repository: TaskRepository) : ViewModel() {
     private val tasksMutable = MutableStateFlow<List<Task>>(emptyList())
     val tasks: StateFlow<List<Task>> = tasksMutable.asStateFlow()
 
+    private val editingTaskMutable = MutableStateFlow<Task?>(null)
+    val editingTask: StateFlow<Task?> = editingTaskMutable.asStateFlow()
+
     init {
         viewModelScope.launch {
             repository.tasksFlow.collect { loadedTasks ->
@@ -36,6 +39,29 @@ class MainViewModel(private val repository: TaskRepository) : ViewModel() {
         viewModelScope.launch {
             val currentList = tasksMutable.value
             repository.deleteTaskById(taskId, currentList)
+        }
+    }
+
+    fun startEditing(task: Task) {
+        editingTaskMutable.value = task
+    }
+
+    fun cancelEditing() {
+        editingTaskMutable.value = null
+    }
+
+    fun updateTask(taskId: String, newName: String) {
+        viewModelScope.launch {
+            val updatedList = tasksMutable.value.map { task ->
+                if (task.id == taskId) {
+                    task.copy(name = newName)
+                } else {
+                    task
+                }
+            }
+            tasksMutable.value = updatedList
+            repository.saveTasks(updatedList)
+            editingTaskMutable.value = null
         }
     }
 }
